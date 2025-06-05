@@ -1,4 +1,4 @@
-package br.com.floris.models.enums;
+package br.com.floris.enums;
 
 public enum TipoSimulacao {
     ENTRADA,
