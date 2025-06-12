@@ -2,6 +2,7 @@ package br.com.floris.service;
 
 import br.com.floris.dto.AuthRequest;
 import br.com.floris.dto.AuthResponse;
+import br.com.floris.enums.Role;
 import br.com.floris.model.User;
 import br.com.floris.repository.UserRepository;
 import br.com.floris.security.JwtService;
@@ -28,19 +29,31 @@ public class AuthService {
         this.authenticationManager = authenticationManager;
     }
 
-    public AuthResponse login(String username, String password) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
-        User user = userRepository.findByUsername(username).orElseThrow();
+    public AuthResponse login(String login, String password) {
+        // Busca por username ou email
+        User user = userRepository.findByUsernameOrEmail(login, login)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        // Autenticação
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), password));
+
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
-        return new AuthResponse(accessToken, refreshToken, "Bearer", 3600); // 3600 = 1h
+        return new AuthResponse(accessToken, refreshToken, "Bearer", 3600);
     }
 
-    public void register(User user) {
+    public AuthResponse registerAndLogin(User user) {
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new RuntimeException("Usuário já cadastrado");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
+        user.setRole(Role.USER); // sempre USER, vamos alterar pelo banco ou conta admin
+        User savedUser = userRepository.save(user);
+
+        // Geração de tokens
+        String accessToken = jwtService.generateAccessToken(savedUser);
+        String refreshToken = jwtService.generateRefreshToken(savedUser);
+
+        return new AuthResponse(accessToken, refreshToken, "Bearer", 3600);
     }
 }

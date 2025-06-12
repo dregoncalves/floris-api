@@ -19,49 +19,50 @@ import java.util.List;
 @EqualsAndHashCode(of = "id")
 public class User implements UserDetails {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	@Column(nullable = false)
-	private String name;
+    @Column(nullable = false)
+    private String name;
 
-	@Column(nullable = false, unique = true)
-	private String username;
+    @Column(nullable = false, unique = true)
+    private String username;
 
-	private int age;
+    @Column(nullable = false, unique = true)
+    private String email;
 
-	@Column(nullable = false)
-	private String password;
+    private int age;
 
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false)
-	private Role role;
+    @Column(nullable = false)
+    private String password;
 
-	// 👇 Implementações do UserDetails
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
 
-	@Override
-	public Collection<? extends GrantedAuthority> getAuthorities() {
-		return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
-	}
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+    }
 
-	@Override
-	public boolean isAccountNonExpired() {
-		return true;
-	}
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
 
-	@Override
-	public boolean isAccountNonLocked() {
-		return true;
-	}
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
 
-	@Override
-	public boolean isCredentialsNonExpired() {
-		return true;
-	}
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
 
-	@Override
-	public boolean isEnabled() {
-		return true;
-	}
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }
