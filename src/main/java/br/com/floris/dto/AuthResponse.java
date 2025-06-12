@@ -5,4 +5,5 @@ public record AuthResponse(
         String refreshToken,
         String tokenType,
         long expiresIn
-) {}
+) {
+}

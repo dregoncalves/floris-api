@@ -24,6 +24,11 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado com id: " + id));
     }
 
+    public User findByUsername(String username) {
+        return repository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+    }
+
     public User create(User user) {
         if (repository.existsByUsername(user.getUsername())) {
             throw new RuntimeException("Username já cadastrado: " + user.getUsername());
