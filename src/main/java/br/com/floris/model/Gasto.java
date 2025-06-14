@@ -1,16 +1,10 @@
 package br.com.floris.model;
 
+import lombok.*;
+import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Entity
 @Data
@@ -21,12 +15,32 @@ public class Gasto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
-    String descricao;
-    BigDecimal valor;
-    LocalDate data;
-    Boolean fixo;
-    Boolean pago;
-    int parcelas;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private User usuario;
+
+    @Column(nullable = false)
+    private String descricao;
+
+    @Column(nullable = false)
+    private BigDecimal valor;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TipoGasto tipo;
+
+    @Column(nullable = false)
+    private LocalDate dataVencimento;
+
+    private Integer numeroParcelaAtual;
+    private Integer totalParcelas;
+
+    private Boolean gastoCartao;
+    private Boolean pago;
+
+    public enum TipoGasto {
+        FIXO, VARIAVEL, PARCELADO
+    }
 }
