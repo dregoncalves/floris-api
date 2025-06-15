@@ -1,11 +1,10 @@
 package br.com.floris.model;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,8 +19,22 @@ public class ReservaEmergencia {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     private BigDecimal valorObjetivo;
     private BigDecimal valorAtual;
     private Boolean ativa;
 
+    private LocalDate dataCriacao;
+    private LocalDate ultimaAtualizacao;
+
+    @Transient
+    public BigDecimal getPercentualConcluido() {
+        if (valorObjetivo == null || valorObjetivo.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+        return valorAtual.divide(valorObjetivo, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
+    }
 }
