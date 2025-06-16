@@ -7,6 +7,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
 
 @RestController
 @RequestMapping("/users")
@@ -56,5 +59,18 @@ public class UserController {
         String username = authentication.getName();
         User user = service.findByUsername(username);
         return UserResponseDTO.fromUser(user);
+    }
+
+    @PutMapping("/me/password")
+    public ResponseEntity<Void> changePassword(@RequestBody Map<String, String> passwordRequest, Authentication authentication) {
+        String senhaAntiga = passwordRequest.get("senhaAntiga");
+        String novaSenha = passwordRequest.get("novaSenha");
+
+        if (senhaAntiga == null || novaSenha == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        service.changePassword(authentication.getName(), senhaAntiga, novaSenha);
+        return ResponseEntity.noContent().build();
     }
 }

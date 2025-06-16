@@ -2,6 +2,7 @@ package br.com.floris.service;
 
 import br.com.floris.model.User;
 import br.com.floris.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,9 +11,11 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository repository) {
+    public UserService(UserRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<User> findAll() {
@@ -41,12 +44,24 @@ public class UserService {
         user.setName(updatedUser.getName());
         user.setUsername(updatedUser.getUsername());
         user.setAge(updatedUser.getAge());
-        user.setPassword(updatedUser.getPassword());
         user.setRole(updatedUser.getRole());
         return repository.save(user);
     }
 
     public void delete(Long id) {
         repository.deleteById(id);
+    }
+
+    public void changePassword(String username, String senhaAntiga, String novaSenha) {
+        User user = findByUsername(username);
+
+        // Verifica se a senha antiga fornecida bate com a do banco
+        if (!passwordEncoder.matches(senhaAntiga, user.getPassword())) {
+            throw new RuntimeException("A senha antiga está incorreta.");
+        }
+
+        // Codifica a nova senha antes de salvar
+        user.setPassword(passwordEncoder.encode(novaSenha));
+        repository.save(user);
     }
 }
