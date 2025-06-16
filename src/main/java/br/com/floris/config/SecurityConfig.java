@@ -1,5 +1,6 @@
 package br.com.floris.config;
 
+import br.com.floris.security.CookieBearerTokenResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,11 +31,12 @@ public class SecurityConfig {
                         .permitAll()
                         .anyRequest().authenticated()
                 )
-                .httpBasic(Customizer.withDefaults())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())
                         )
+                        // Novo resolver
+                        .bearerTokenResolver(new CookieBearerTokenResolver())
                 )
                 .build();
     }
@@ -47,7 +49,7 @@ public class SecurityConfig {
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        authoritiesConverter.setAuthorityPrefix("ROLE_"); // Ex: ROLE_USER
+        authoritiesConverter.setAuthorityPrefix("ROLE_");
         authoritiesConverter.setAuthoritiesClaimName("authorities");
 
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();

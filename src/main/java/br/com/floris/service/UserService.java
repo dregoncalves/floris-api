@@ -32,6 +32,12 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
     }
 
+    // ADICIONE ESTE MÉTODO
+    public User findByUsernameOrEmail(String login, String email) {
+        return repository.findByUsernameOrEmail(login, login)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com login: " + login));
+    }
+
     public User create(User user) {
         if (repository.existsByUsername(user.getUsername())) {
             throw new RuntimeException("Username já cadastrado: " + user.getUsername());
@@ -55,12 +61,10 @@ public class UserService {
     public void changePassword(String username, String senhaAntiga, String novaSenha) {
         User user = findByUsername(username);
 
-        // Verifica se a senha antiga fornecida bate com a do banco
         if (!passwordEncoder.matches(senhaAntiga, user.getPassword())) {
             throw new RuntimeException("A senha antiga está incorreta.");
         }
 
-        // Codifica a nova senha antes de salvar
         user.setPassword(passwordEncoder.encode(novaSenha));
         repository.save(user);
     }
