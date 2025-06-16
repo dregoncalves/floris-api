@@ -5,11 +5,10 @@ import br.com.floris.dto.gastos.GastoResponseDTO;
 import br.com.floris.model.Gasto;
 import br.com.floris.model.User;
 import br.com.floris.repository.GastoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class GastoService {
@@ -22,11 +21,11 @@ public class GastoService {
         this.userService = userService;
     }
 
-    public List<GastoResponseDTO> listarGastosDoUsuario(Authentication authentication) {
+    public Page<GastoResponseDTO> listarGastosDoUsuario(Authentication authentication, Pageable pageable) {
         User usuario = getUsuarioAutenticado(authentication);
-        return repository.findByUsuarioId(usuario.getId()).stream()
-                .map(GastoResponseDTO::fromModel)
-                .collect(Collectors.toList());
+        Page<Gasto> gastosPage = repository.findByUsuarioId(usuario.getId(), pageable);
+        
+        return gastosPage.map(GastoResponseDTO::fromModel);
     }
 
     public GastoResponseDTO buscarPorId(Long id, Authentication authentication) {

@@ -4,10 +4,13 @@ import br.com.floris.dto.gastos.GastoRequestDTO;
 import br.com.floris.dto.gastos.GastoResponseDTO;
 import br.com.floris.service.GastoService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 @RestController
 @RequestMapping("/gastos")
@@ -20,8 +23,8 @@ public class GastoController {
     }
 
     @GetMapping
-    public List<GastoResponseDTO> listar(Authentication authentication) {
-        return service.listarGastosDoUsuario(authentication);
+    public Page<GastoResponseDTO> listar(Authentication authentication, @PageableDefault(sort = "dataVencimento", direction = Sort.Direction.DESC) Pageable pageable) {
+        return service.listarGastosDoUsuario(authentication, pageable);
     }
 
     @GetMapping("/{id}")

@@ -4,7 +4,7 @@ import br.com.floris.dto.*;
 import br.com.floris.model.Entrada;
 import br.com.floris.model.Gasto;
 import br.com.floris.model.MetaFinanceira;
-import br.com.floris.model.ReservaEmergencia; // supondo que exista esse Model
+import br.com.floris.model.ReservaEmergencia;
 import br.com.floris.model.User;
 import br.com.floris.repository.EntradaRepository;
 import br.com.floris.repository.GastoRepository;
@@ -48,8 +48,8 @@ public class DashboardService {
         LocalDate hoje = LocalDate.now();
         String mesReferencia = hoje.format(DateTimeFormatter.ofPattern("yyyy-MM"));
 
-        List<Entrada> entradas = entradaRepository.findByUsuarioId(usuario.getId());
-        List<Gasto> gastos = gastoRepository.findByUsuarioId(usuario.getId());
+        List<Entrada> entradas = entradaRepository.findAllByUsuarioId(usuario.getId());
+        List<Gasto> gastos = gastoRepository.findAllByUsuarioId(usuario.getId());
         List<MetaFinanceira> metas = metaFinanceiraRepository.findByUsuarioId(usuario.getId());
 
         // Entradas/Gastos do mês atual

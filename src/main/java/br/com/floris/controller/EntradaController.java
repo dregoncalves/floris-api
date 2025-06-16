@@ -7,7 +7,10 @@ import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 
 @RestController
 @RequestMapping("/entradas")
@@ -20,8 +23,8 @@ public class EntradaController {
     }
 
     @GetMapping
-    public List<EntradaResponseDTO> listar(Authentication authentication) {
-        return service.listarEntradasDoUsuario(authentication);
+    public Page<EntradaResponseDTO> listar(Authentication authentication, @PageableDefault(sort = "dataRecebimento", direction = Sort.Direction.DESC) Pageable pageable) {
+        return service.listarEntradasDoUsuario(authentication, pageable);
     }
 
     @GetMapping("/{id}")

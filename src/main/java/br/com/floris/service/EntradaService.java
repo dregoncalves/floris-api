@@ -8,8 +8,8 @@ import br.com.floris.repository.EntradaRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class EntradaService {
@@ -22,11 +22,10 @@ public class EntradaService {
         this.userService = userService;
     }
 
-    public List<EntradaResponseDTO> listarEntradasDoUsuario(Authentication authentication) {
+    public Page<EntradaResponseDTO> listarEntradasDoUsuario(Authentication authentication, Pageable pageable) {
         User usuario = getUsuarioAutenticado(authentication);
-        return repository.findByUsuarioId(usuario.getId()).stream()
-                .map(EntradaResponseDTO::fromModel)
-                .collect(Collectors.toList());
+        Page<Entrada> entradasPage = repository.findByUsuarioId(usuario.getId(), pageable);
+        return entradasPage.map(EntradaResponseDTO::fromModel);
     }
 
     public EntradaResponseDTO buscarPorId(Long id, Authentication authentication) {
