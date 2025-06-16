@@ -31,11 +31,8 @@ public class EntradaService {
 
     public EntradaResponseDTO buscarPorId(Long id, Authentication authentication) {
         User usuario = getUsuarioAutenticado(authentication);
-        Entrada entrada = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Entrada não encontrada"));
-        if (!entrada.getUsuario().getId().equals(usuario.getId())) {
-            throw new RuntimeException("Acesso negado");
-        }
+        Entrada entrada = repository.findByIdAndUsuarioId(id, usuario.getId())
+                .orElseThrow(() -> new RuntimeException("Entrada não encontrada ou não pertence ao usuário"));
         return EntradaResponseDTO.fromModel(entrada);
     }
 
@@ -56,12 +53,8 @@ public class EntradaService {
 
     public EntradaResponseDTO atualizar(Long id, EntradaRequestDTO dto, Authentication authentication) {
         User usuario = getUsuarioAutenticado(authentication);
-        Entrada entrada = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Entrada não encontrada"));
-
-        if (!entrada.getUsuario().getId().equals(usuario.getId())) {
-            throw new RuntimeException("Acesso negado");
-        }
+        Entrada entrada = repository.findByIdAndUsuarioId(id, usuario.getId())
+                .orElseThrow(() -> new RuntimeException("Entrada não encontrada ou não pertence ao usuário"));
 
         entrada.setDescricao(dto.descricao());
         entrada.setValor(dto.valor());
@@ -75,12 +68,9 @@ public class EntradaService {
 
     public void deletar(Long id, Authentication authentication) {
         User usuario = getUsuarioAutenticado(authentication);
-        Entrada entrada = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Entrada não encontrada"));
+        Entrada entrada = repository.findByIdAndUsuarioId(id, usuario.getId())
+                .orElseThrow(() -> new RuntimeException("Entrada não encontrada ou não pertence ao usuário"));
 
-        if (!entrada.getUsuario().getId().equals(usuario.getId())) {
-            throw new RuntimeException("Acesso negado");
-        }
         repository.delete(entrada);
     }
 

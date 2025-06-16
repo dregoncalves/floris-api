@@ -31,11 +31,9 @@ public class GastoService {
 
     public GastoResponseDTO buscarPorId(Long id, Authentication authentication) {
         User usuario = getUsuarioAutenticado(authentication);
-        Gasto gasto = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Gasto não encontrado"));
-        if (!gasto.getUsuario().getId().equals(usuario.getId())) {
-            throw new RuntimeException("Acesso negado");
-        }
+        Gasto gasto = repository.findByIdAndUsuarioId(id, usuario.getId())
+                .orElseThrow(() -> new RuntimeException("Gasto não encontrado ou não pertence ao usuário"));
+
         return GastoResponseDTO.fromModel(gasto);
     }
 
@@ -59,12 +57,9 @@ public class GastoService {
 
     public GastoResponseDTO atualizar(Long id, GastoRequestDTO dto, Authentication authentication) {
         User usuario = getUsuarioAutenticado(authentication);
-        Gasto gasto = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Gasto não encontrado"));
-
-        if (!gasto.getUsuario().getId().equals(usuario.getId())) {
-            throw new RuntimeException("Acesso negado");
-        }
+        // Use o método inteligente aqui também!
+        Gasto gasto = repository.findByIdAndUsuarioId(id, usuario.getId())
+                .orElseThrow(() -> new RuntimeException("Gasto não encontrado ou não pertence ao usuário"));
 
         gasto.setDescricao(dto.descricao());
         gasto.setValor(dto.valor());
@@ -81,12 +76,10 @@ public class GastoService {
 
     public void deletar(Long id, Authentication authentication) {
         User usuario = getUsuarioAutenticado(authentication);
-        Gasto gasto = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Gasto não encontrado"));
+        // E aqui também!
+        Gasto gasto = repository.findByIdAndUsuarioId(id, usuario.getId())
+                .orElseThrow(() -> new RuntimeException("Gasto não encontrado ou não pertence ao usuário"));
 
-        if (!gasto.getUsuario().getId().equals(usuario.getId())) {
-            throw new RuntimeException("Acesso negado");
-        }
         repository.delete(gasto);
     }
 
