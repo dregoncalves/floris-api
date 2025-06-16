@@ -19,9 +19,10 @@ public class ReservaEmergencia {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private User usuario;
+
 
     private BigDecimal valorObjetivo;
     private BigDecimal valorAtual;

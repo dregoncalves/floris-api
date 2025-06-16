@@ -1,4 +1,4 @@
-package br.com.floris.dto;
+package br.com.floris.dto.entradas;
 
 import br.com.floris.model.Entrada;
 import br.com.floris.model.Entrada.TipoEntrada;

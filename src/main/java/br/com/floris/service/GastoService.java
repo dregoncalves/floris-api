@@ -1,7 +1,7 @@
 package br.com.floris.service;
 
-import br.com.floris.dto.GastoRequestDTO;
-import br.com.floris.dto.GastoResponseDTO;
+import br.com.floris.dto.gastos.GastoRequestDTO;
+import br.com.floris.dto.gastos.GastoResponseDTO;
 import br.com.floris.model.Gasto;
 import br.com.floris.model.User;
 import br.com.floris.repository.GastoRepository;

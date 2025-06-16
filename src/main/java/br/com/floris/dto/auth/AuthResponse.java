@@ -1,4 +1,4 @@
-package br.com.floris.dto;
+package br.com.floris.dto.auth;
 
 public record AuthResponse(
         String accessToken,

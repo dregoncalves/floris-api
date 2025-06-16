@@ -1,18 +1,18 @@
 package br.com.floris.dto;
 
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import lombok.Data;
-
 @Data
-public class ReservaEmergenciaDTO {
+public class MetaFinanceiraResumoDTO {
     private Long id;
     private Long usuarioId;
+    private String descricao;
     private BigDecimal valorObjetivo;
     private BigDecimal valorAtual;
+    private LocalDate prazoFinal;
+    private Boolean concluida;
     private BigDecimal percentualConcluido;
-    private Boolean ativa;
-    private LocalDate dataCriacao;
-    private LocalDate ultimaAtualizacao;
 }

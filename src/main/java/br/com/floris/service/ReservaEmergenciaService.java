@@ -25,7 +25,7 @@ public class ReservaEmergenciaService {
                 .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
         ReservaEmergencia reserva = new ReservaEmergencia();
-        reserva.setUser(user);
+        reserva.setUsuario(user); // <-- aqui
         reserva.setValorObjetivo(dto.getValorObjetivo());
         reserva.setValorAtual(dto.getValorAtual());
         reserva.setAtiva(true);
@@ -40,7 +40,7 @@ public class ReservaEmergenciaService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
-        ReservaEmergencia reserva = reservaRepository.findByUser(user)
+        ReservaEmergencia reserva = reservaRepository.findByUsuario(user)
                 .orElseThrow(() -> new EntityNotFoundException("Reserva não encontrada"));
 
         return toDTO(reserva);
@@ -50,7 +50,7 @@ public class ReservaEmergenciaService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
-        ReservaEmergencia reserva = reservaRepository.findByUser(user)
+        ReservaEmergencia reserva = reservaRepository.findByUsuario(user)
                 .orElseThrow(() -> new EntityNotFoundException("Reserva não encontrada"));
 
         reserva.setValorObjetivo(dto.getValorObjetivo());
@@ -66,7 +66,7 @@ public class ReservaEmergenciaService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
-        ReservaEmergencia reserva = reservaRepository.findByUser(user)
+        ReservaEmergencia reserva = reservaRepository.findByUsuario(user)
                 .orElseThrow(() -> new EntityNotFoundException("Reserva não encontrada"));
 
         reservaRepository.delete(reserva);
@@ -75,7 +75,7 @@ public class ReservaEmergenciaService {
     private ReservaEmergenciaDTO toDTO(ReservaEmergencia reserva) {
         ReservaEmergenciaDTO dto = new ReservaEmergenciaDTO();
         dto.setId(reserva.getId());
-        dto.setUsuarioId(reserva.getUser().getId());
+        dto.setUsuarioId(reserva.getUsuario().getId()); // <-- aqui
         dto.setValorObjetivo(reserva.getValorObjetivo());
         dto.setValorAtual(reserva.getValorAtual());
         dto.setPercentualConcluido(reserva.getPercentualConcluido());

@@ -1,7 +1,6 @@
 package br.com.floris.service;
 
-import br.com.floris.dto.AuthRequest;
-import br.com.floris.dto.AuthResponse;
+import br.com.floris.dto.auth.AuthResponse;
 import br.com.floris.enums.Role;
 import br.com.floris.model.User;
 import br.com.floris.repository.UserRepository;
@@ -55,5 +54,22 @@ public class AuthService {
         String refreshToken = jwtService.generateRefreshToken(savedUser);
 
         return new AuthResponse(accessToken, refreshToken, "Bearer", 3600);
+    }
+
+    public AuthResponse refreshToken(String refreshToken) {
+        // Valida se o token é realmente refresh e se está válido
+        if (!jwtService.isValid(refreshToken) || !jwtService.isRefreshToken(refreshToken)) {
+            throw new RuntimeException("Refresh token inválido ou expirado.");
+        }
+
+        String username = jwtService.extractSubject(refreshToken);
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        String newAccessToken = jwtService.generateAccessToken(user);
+        String newRefreshToken = jwtService.generateRefreshToken(user);
+
+        return new AuthResponse(newAccessToken, newRefreshToken, "Bearer", 3600);
     }
 }

@@ -1,7 +1,7 @@
 package br.com.floris.controller;
 
-import br.com.floris.dto.GastoRequestDTO;
-import br.com.floris.dto.GastoResponseDTO;
+import br.com.floris.dto.gastos.GastoRequestDTO;
+import br.com.floris.dto.gastos.GastoResponseDTO;
 import br.com.floris.service.GastoService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;

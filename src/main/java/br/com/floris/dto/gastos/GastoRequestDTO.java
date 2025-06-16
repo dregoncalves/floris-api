@@ -1,4 +1,4 @@
-package br.com.floris.dto;
+package br.com.floris.dto.gastos;
 
 import br.com.floris.model.Gasto.TipoGasto;
 import jakarta.validation.constraints.*;

@@ -1,7 +1,7 @@
 package br.com.floris.service;
 
-import br.com.floris.dto.EntradaRequestDTO;
-import br.com.floris.dto.EntradaResponseDTO;
+import br.com.floris.dto.entradas.EntradaRequestDTO;
+import br.com.floris.dto.entradas.EntradaResponseDTO;
 import br.com.floris.model.Entrada;
 import br.com.floris.model.User;
 import br.com.floris.repository.EntradaRepository;

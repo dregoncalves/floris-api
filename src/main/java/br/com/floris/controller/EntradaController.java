@@ -1,7 +1,7 @@
 package br.com.floris.controller;
 
-import br.com.floris.dto.EntradaRequestDTO;
-import br.com.floris.dto.EntradaResponseDTO;
+import br.com.floris.dto.entradas.EntradaRequestDTO;
+import br.com.floris.dto.entradas.EntradaResponseDTO;
 import br.com.floris.service.EntradaService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
