@@ -17,7 +17,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,44 +51,96 @@ public class DashboardService {
         LocalDate hoje = LocalDate.now();
         String mesReferencia = hoje.format(DateTimeFormatter.ofPattern("yyyy-MM"));
 
-        List<Entrada> entradas = entradaRepository.findAllByUsuarioId(usuario.getId());
-        List<Gasto> gastos = gastoRepository.findAllByUsuarioId(usuario.getId());
-        List<MetaFinanceira> metas = metaFinanceiraRepository.findByUsuarioId(usuario.getId());
+        // --- Otimização: Busca apenas as transações do mês atual ---
+        // NOTA: Você precisa criar estes métodos nos seus JpaRepository
+        // Ex: List<Gasto> findByUsuarioIdAndDataVencimentoBetween(Long id, LocalDate start, LocalDate end);
+        LocalDate inicioDoMes = hoje.withDayOfMonth(1);
+        LocalDate fimDoMes = hoje.withDayOfMonth(hoje.lengthOfMonth());
 
-        // Entradas/Gastos do mês atual
-        List<Entrada> entradasMes = entradas.stream()
-                .filter(e -> isSameMonth(e.getDataRecebimento(), hoje))
-                .collect(Collectors.toList());
+        List<Entrada> entradasMes = entradaRepository.findAllByUsuarioIdAndDataRecebimentoBetween(usuario.getId(), inicioDoMes, fimDoMes);
 
-        List<Gasto> gastosMes = gastos.stream()
-                .filter(g -> isSameMonth(g.getDataVencimento(), hoje))
-                .collect(Collectors.toList());
+        // Para os gastos, precisamos de uma lógica um pouco diferente para pegar parcelas de meses anteriores
+        // A forma mais simples é buscar todos e filtrar na aplicação, já que a projeção fará isso de qualquer forma.
+        List<Gasto> todosOsGastos = gastoRepository.findAllByUsuarioId(usuario.getId());
 
+        List<Gasto> gastosDoMes = todosOsGastos.stream().filter(gasto -> {
+            if (gasto.getTipo() != Gasto.TipoGasto.PARCELADO) {
+                return !gasto.getDataVencimento().isBefore(inicioDoMes) && !gasto.getDataVencimento().isAfter(fimDoMes);
+            } else {
+                LocalDate dataPrimeiraParcela = gasto.getDataVencimento();
+                LocalDate dataUltimaParcela = dataPrimeiraParcela.plusMonths(gasto.getTotalParcelas() - 1);
+                return !hoje.isBefore(dataPrimeiraParcela.withDayOfMonth(1)) && !hoje.isAfter(dataUltimaParcela.withDayOfMonth(1));
+            }
+        }).collect(Collectors.toList());
+
+
+        // --- Cálculos Focados no Mês de Referência ---
         BigDecimal totalEntradas = entradasMes.stream()
                 .map(Entrada::getValor)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal totalGastosFixos = gastosMes.stream()
+        BigDecimal totalGastosFixos = gastosDoMes.stream()
                 .filter(g -> g.getTipo() == Gasto.TipoGasto.FIXO)
-                .map(Gasto::getValor)
+                .map(Gasto::getValorMensal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal totalGastosVariaveis = gastosMes.stream()
+        BigDecimal totalGastosVariaveis = gastosDoMes.stream()
                 .filter(g -> g.getTipo() == Gasto.TipoGasto.VARIAVEL)
-                .map(Gasto::getValor)
+                .map(Gasto::getValorMensal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal totalLivre = totalEntradas.subtract(totalGastosFixos).subtract(totalGastosVariaveis);
+        BigDecimal totalGastosParcelados = gastosDoMes.stream()
+                .filter(g -> g.getTipo() == Gasto.TipoGasto.PARCELADO)
+                .map(Gasto::getValorMensal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalGastosDoMes = totalGastosFixos.add(totalGastosVariaveis).add(totalGastosParcelados);
+        BigDecimal saldoDoMes = totalEntradas.subtract(totalGastosDoMes);
+
+        // --- Montagem do DTO com dados consistentes ---
+        DashboardDTO dto = new DashboardDTO();
+        dto.setMesReferencia(mesReferencia);
+        dto.setSaldoAtual(saldoDoMes.setScale(2, RoundingMode.HALF_UP));
+        dto.setTotalEntradas(totalEntradas.setScale(2, RoundingMode.HALF_UP));
+        dto.setTotalGastosFixos(totalGastosFixos.setScale(2, RoundingMode.HALF_UP));
+        dto.setTotalGastosVariaveis(totalGastosVariaveis.setScale(2, RoundingMode.HALF_UP));
+        dto.setTotalLivre(saldoDoMes.setScale(2, RoundingMode.HALF_UP));
 
         BigDecimal percentualFixos = percentual(totalGastosFixos, totalEntradas);
-        BigDecimal percentualVariaveis = percentual(totalGastosVariaveis, totalEntradas);
-        BigDecimal percentualLivre = percentual(totalLivre, totalEntradas);
+        BigDecimal percentualVariaveis = percentual(totalGastosVariaveis.add(totalGastosParcelados), totalEntradas); // Somando parcelado aqui por simplicidade
+        BigDecimal percentualLivre = percentual(saldoDoMes, totalEntradas);
 
-        BigDecimal saldoAtual = calcularSaldoAteHoje(entradas, gastos, hoje);
+        dto.setPercentualFixos(percentualFixos.setScale(1, RoundingMode.HALF_UP));
+        dto.setPercentualVariaveis(percentualVariaveis.setScale(1, RoundingMode.HALF_UP));
+        dto.setPercentualLivre(percentualLivre.setScale(1, RoundingMode.HALF_UP));
 
-        ReservaEmergenciaDTO reservaEmergencia = buscarReservaEmergencia(usuario);
+        // --- Lógica Auxiliar e Projeções ---
+        dto.setReservaEmergencia(buscarReservaEmergencia(usuario));
+        List<MetaFinanceira> metas = metaFinanceiraRepository.findByUsuarioId(usuario.getId());
+        dto.setMetasFinanceiras(transformarMetasEmDTO(metas));
 
-        List<MetaFinanceiraResumoDTO> metasResumo = metas.stream().map(meta -> {
+        // A projeção começa a partir do saldo deste mês
+        List<SaldoProjetadoDTO> fluxoProjetado = calcularFluxoProjetadoProximosMeses(usuario, hoje, saldoDoMes);
+        dto.setFluxoProjetadoProximosMeses(fluxoProjetado);
+
+        // Divisão de gastos agora reflete o parcelado
+        List<DivisaoGastosDTO> divisaoGastos = Arrays.asList(
+                criarDivisao("Fixos", totalGastosFixos, percentualFixos),
+                criarDivisao("Variáveis e Parcelados", totalGastosVariaveis.add(totalGastosParcelados), percentualVariaveis),
+                criarDivisao("Livre", saldoDoMes, percentualLivre)
+        );
+        dto.setDivisaoGastos(divisaoGastos);
+
+        dto.setDiagnostico(gerarDiagnosticos(percentualFixos, percentualVariaveis, percentualLivre, dto.getReservaEmergencia()));
+        dto.setAlertas(gerarAlertas(percentualFixos, percentualVariaveis, saldoDoMes, dto.getReservaEmergencia()));
+
+        return dto;
+    }
+
+    // ==== Métodos Auxiliares ====
+
+    private List<MetaFinanceiraResumoDTO> transformarMetasEmDTO(List<MetaFinanceira> metas) {
+        return metas.stream().map(meta -> {
             MetaFinanceiraResumoDTO dto = new MetaFinanceiraResumoDTO();
             dto.setId(meta.getId());
             dto.setUsuarioId(meta.getUsuario().getId());
@@ -100,42 +155,6 @@ public class DashboardService {
             dto.setPercentualConcluido(perc.setScale(2, RoundingMode.HALF_UP));
             return dto;
         }).collect(Collectors.toList());
-
-        List<SaldoProjetadoDTO> fluxoProjetado = calcularFluxoProjetadoProximosMeses(entradas, gastos, hoje, saldoAtual);
-
-        List<DivisaoGastosDTO> divisaoGastos = Arrays.asList(
-                criarDivisao("Fixos", totalGastosFixos, percentualFixos),
-                criarDivisao("Variaveis", totalGastosVariaveis, percentualVariaveis),
-                criarDivisao("Livre", totalLivre, percentualLivre)
-        );
-
-        List<String> diagnostico = gerarDiagnosticos(percentualFixos, percentualVariaveis, percentualLivre, reservaEmergencia);
-        List<String> alertas = gerarAlertas(percentualFixos, percentualVariaveis, saldoAtual, reservaEmergencia);
-
-        DashboardDTO dto = new DashboardDTO();
-        dto.setMesReferencia(mesReferencia);
-        dto.setSaldoAtual(saldoAtual.setScale(2, RoundingMode.HALF_UP));
-        dto.setTotalEntradas(totalEntradas.setScale(2, RoundingMode.HALF_UP));
-        dto.setTotalGastosFixos(totalGastosFixos.setScale(2, RoundingMode.HALF_UP));
-        dto.setTotalGastosVariaveis(totalGastosVariaveis.setScale(2, RoundingMode.HALF_UP));
-        dto.setTotalLivre(totalLivre.setScale(2, RoundingMode.HALF_UP));
-        dto.setPercentualFixos(percentualFixos.setScale(1, RoundingMode.HALF_UP));
-        dto.setPercentualVariaveis(percentualVariaveis.setScale(1, RoundingMode.HALF_UP));
-        dto.setPercentualLivre(percentualLivre.setScale(1, RoundingMode.HALF_UP));
-        dto.setReservaEmergencia(reservaEmergencia);
-        dto.setMetasFinanceiras(metasResumo);
-        dto.setFluxoProjetadoProximosMeses(fluxoProjetado);
-        dto.setDivisaoGastos(divisaoGastos);
-        dto.setDiagnostico(diagnostico);
-        dto.setAlertas(alertas);
-
-        return dto;
-    }
-
-    // ==== Métodos Auxiliares ====
-
-    private boolean isSameMonth(LocalDate data, LocalDate referencia) {
-        return data != null && data.getYear() == referencia.getYear() && data.getMonth() == referencia.getMonth();
     }
 
     private BigDecimal percentual(BigDecimal valor, BigDecimal total) {
@@ -143,22 +162,7 @@ public class DashboardService {
         return valor.divide(total, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
     }
 
-    private BigDecimal calcularSaldoAteHoje(List<Entrada> entradas, List<Gasto> gastos, LocalDate hoje) {
-        BigDecimal totalEntradas = entradas.stream()
-                .filter(e -> !e.getDataRecebimento().isAfter(hoje))
-                .map(Entrada::getValor)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal totalGastos = gastos.stream()
-                .filter(g -> !g.getDataVencimento().isAfter(hoje))
-                .map(Gasto::getValor)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        return totalEntradas.subtract(totalGastos);
-    }
-
     private ReservaEmergenciaDTO buscarReservaEmergencia(User usuario) {
-        // Busca real, adaptando ao seu Model/Repository
         Optional<ReservaEmergencia> reservaOpt = reservaEmergenciaRepository.findByUsuario(usuario);
         if (reservaOpt.isPresent()) {
             ReservaEmergencia reserva = reservaOpt.get();
@@ -167,10 +171,7 @@ public class DashboardService {
             dto.setUsuarioId(reserva.getUsuario().getId());
             dto.setValorAtual(reserva.getValorAtual());
             dto.setValorObjetivo(reserva.getValorObjetivo());
-            BigDecimal percentual = reserva.getValorObjetivo() != null && reserva.getValorObjetivo().compareTo(BigDecimal.ZERO) > 0
-                    ? reserva.getValorAtual().divide(reserva.getValorObjetivo(), 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100))
-                    : BigDecimal.ZERO;
-            dto.setPercentualConcluido(percentual.setScale(2, RoundingMode.HALF_UP));
+            dto.setPercentualConcluido(reserva.getPercentualConcluido());
             dto.setAtiva(reserva.getAtiva());
             dto.setDataCriacao(reserva.getDataCriacao());
             dto.setUltimaAtualizacao(reserva.getUltimaAtualizacao());
@@ -180,31 +181,55 @@ public class DashboardService {
         }
     }
 
-    private List<SaldoProjetadoDTO> calcularFluxoProjetadoProximosMeses(List<Entrada> entradas, List<Gasto> gastos, LocalDate hoje, BigDecimal saldoAtual) {
-        List<SaldoProjetadoDTO> fluxo = new ArrayList<>();
-        BigDecimal saldo = saldoAtual;
-        for (int i = 1; i <= 3; i++) {
-            LocalDate inicioMes = hoje.plusMonths(i).withDayOfMonth(1);
-            LocalDate fimMes = inicioMes.withDayOfMonth(inicioMes.lengthOfMonth());
+    private List<SaldoProjetadoDTO> calcularFluxoProjetadoProximosMeses(User usuario, LocalDate hoje, BigDecimal saldoInicial) {
+        List<SaldoProjetadoDTO> fluxoProjetado = new ArrayList<>();
+        BigDecimal saldoAcumulado = saldoInicial;
 
-            BigDecimal entradasMes = entradas.stream()
-                    .filter(e -> !e.getDataRecebimento().isBefore(inicioMes) && !e.getDataRecebimento().isAfter(fimMes))
+        List<Entrada> todasAsEntradas = entradaRepository.findAllByUsuarioId(usuario.getId());
+        List<Gasto> todosOsGastos = gastoRepository.findAllByUsuarioId(usuario.getId());
+
+        for (int i = 1; i <= 6; i++) {
+            LocalDate mesDaProjecao = hoje.plusMonths(i);
+            LocalDate inicioDoMesProjecao = mesDaProjecao.withDayOfMonth(1);
+            LocalDate fimDoMesProjecao = mesDaProjecao.withDayOfMonth(mesDaProjecao.lengthOfMonth());
+
+            BigDecimal totalEntradasMes = todasAsEntradas.stream()
+                    .filter(entrada -> {
+                        if (entrada.getRecorrente()) {
+                            return !mesDaProjecao.isBefore(entrada.getDataRecebimento().withDayOfMonth(1));
+                        }
+                        return !entrada.getDataRecebimento().isBefore(inicioDoMesProjecao) && !entrada.getDataRecebimento().isAfter(fimDoMesProjecao);
+                    })
                     .map(Entrada::getValor)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            BigDecimal gastosMes = gastos.stream()
-                    .filter(g -> !g.getDataVencimento().isBefore(inicioMes) && !g.getDataVencimento().isAfter(fimMes))
-                    .map(Gasto::getValor)
+            BigDecimal totalGastosMes = todosOsGastos.stream()
+                    .filter(gasto -> {
+                        switch (gasto.getTipo()) {
+                            case PARCELADO:
+                                LocalDate dataPrimeiraParcela = gasto.getDataVencimento();
+                                LocalDate dataUltimaParcela = dataPrimeiraParcela.plusMonths(gasto.getTotalParcelas() - 1);
+                                return !mesDaProjecao.isBefore(dataPrimeiraParcela.withDayOfMonth(1)) && !mesDaProjecao.isAfter(dataUltimaParcela.withDayOfMonth(1));
+                            case FIXO:
+                                return !mesDaProjecao.isBefore(gasto.getDataVencimento().withDayOfMonth(1));
+                            case VARIAVEL:
+                                return !gasto.getDataVencimento().isBefore(inicioDoMesProjecao) && !gasto.getDataVencimento().isAfter(fimDoMesProjecao);
+                            default:
+                                return false;
+                        }
+                    })
+                    .map(Gasto::getValorMensal)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            saldo = saldo.add(entradasMes).subtract(gastosMes);
-            String mes = inicioMes.format(DateTimeFormatter.ofPattern("yyyy-MM"));
+            saldoAcumulado = saldoAcumulado.add(totalEntradasMes).subtract(totalGastosMes);
+
+            String mesFormatado = inicioDoMesProjecao.format(DateTimeFormatter.ofPattern("yyyy-MM"));
             SaldoProjetadoDTO saldoDto = new SaldoProjetadoDTO();
-            saldoDto.setMes(mes);
-            saldoDto.setSaldo(saldo.setScale(2, RoundingMode.HALF_UP));
-            fluxo.add(saldoDto);
+            saldoDto.setMes(mesFormatado);
+            saldoDto.setSaldo(saldoAcumulado.setScale(2, RoundingMode.HALF_UP));
+            fluxoProjetado.add(saldoDto);
         }
-        return fluxo;
+        return fluxoProjetado;
     }
 
     private DivisaoGastosDTO criarDivisao(String tipo, BigDecimal valor, BigDecimal percentual) {
@@ -218,33 +243,26 @@ public class DashboardService {
     private List<String> gerarDiagnosticos(BigDecimal percentualFixos, BigDecimal percentualVariaveis, BigDecimal percentualLivre, ReservaEmergenciaDTO reserva) {
         List<String> diags = new ArrayList<>();
         if (percentualFixos.compareTo(BigDecimal.valueOf(50)) <= 0) {
-            diags.add("Seus gastos fixos estão em " + percentualFixos + "% da renda — saudável!");
+            diags.add("Seus gastos fixos representam " + percentualFixos.setScale(1, RoundingMode.HALF_UP) + "% da sua renda, um nível saudável!");
         } else {
-            diags.add("Gastos fixos elevados! (" + percentualFixos + "% da renda)");
+            diags.add("Atenção: seus gastos fixos (" + percentualFixos.setScale(1, RoundingMode.HALF_UP) + "%) parecem elevados.");
         }
         if (reserva != null && reserva.getPercentualConcluido() != null) {
-            diags.add("Reserva de emergência em " + reserva.getPercentualConcluido().setScale(1, RoundingMode.HALF_UP) + "% da meta (R$" +
-                    reserva.getValorAtual().setScale(2, RoundingMode.HALF_UP) + " de R$" +
-                    reserva.getValorObjetivo().setScale(2, RoundingMode.HALF_UP) + ").");
+            diags.add("Sua reserva de emergência está " + reserva.getPercentualConcluido().setScale(1, RoundingMode.HALF_UP) + "% concluída.");
         }
-        diags.add("Saldo projetado positivo nos próximos meses.");
         return diags;
     }
 
-    private List<String> gerarAlertas(BigDecimal percentualFixos, BigDecimal percentualVariaveis, BigDecimal saldoAtual, ReservaEmergenciaDTO reserva) {
+    private List<String> gerarAlertas(BigDecimal percentualFixos, BigDecimal percentualVariaveis, BigDecimal saldoDoMes, ReservaEmergenciaDTO reserva) {
         List<String> alertas = new ArrayList<>();
-        if (saldoAtual.compareTo(BigDecimal.ZERO) < 0) {
-            alertas.add("Saldo negativo");
+        if (saldoDoMes.compareTo(BigDecimal.ZERO) < 0) {
+            alertas.add("Alerta: seu saldo neste mês ficou negativo.");
         }
-        if (percentualFixos.compareTo(BigDecimal.valueOf(60)) > 0) {
-            alertas.add("Atenção: gastos fixos altos.");
+        if (percentualVariaveis.compareTo(BigDecimal.valueOf(35)) > 0) {
+            alertas.add("Fique de olho nos seus gastos variáveis e parcelados, eles estão consumindo " + percentualVariaveis.setScale(1, RoundingMode.HALF_UP) + "% da sua renda.");
         }
-        if (percentualVariaveis.compareTo(BigDecimal.valueOf(20)) > 0) {
-            alertas.add("Fique atento aos gastos variáveis — subiram em relação ao mês anterior.");
-        }
-        if (reserva != null && reserva.getPercentualConcluido() != null &&
-                reserva.getPercentualConcluido().compareTo(BigDecimal.valueOf(20)) < 0) {
-            alertas.add("Sua reserva de emergência está abaixo de 20% da meta.");
+        if (reserva != null && reserva.getValorAtual().compareTo(BigDecimal.ZERO) <= 0) {
+            alertas.add("Você ainda não começou a construir sua reserva de emergência. É um passo importante!");
         }
         return alertas;
     }
