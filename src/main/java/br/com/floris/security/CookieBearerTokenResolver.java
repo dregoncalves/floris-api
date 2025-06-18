@@ -9,21 +9,21 @@ import java.util.Arrays;
 
 public class CookieBearerTokenResolver implements BearerTokenResolver {
 
-    // O nome do cookie que armazena o Access Token
+    // Nome do cookie do Access Token
     private static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
 
     @Override
     public String resolve(HttpServletRequest request) {
-        // Se não houver cookies na requisição, não há token a ser resolvido
+        // Se não tiver cookies, não tem token
         if (request.getCookies() == null) {
             return null;
         }
 
-        // Procura pelo cookie com o nome esperado
+        // Procura o cookie do Access Token
         return Arrays.stream(request.getCookies())
                 .filter(cookie -> ACCESS_TOKEN_COOKIE_NAME.equals(cookie.getName()))
                 .map(Cookie::getValue)
                 .findFirst()
-                .orElse(null); // Retorna null se o cookie não for encontrado
+                .orElse(null); // Retorna null se não achar
     }
 }

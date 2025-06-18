@@ -22,12 +22,14 @@ public class EntradaService {
         this.userService = userService;
     }
 
+    // Lista as entradas de um usuário, com paginação
     public Page<EntradaResponseDTO> listarEntradasDoUsuario(Authentication authentication, Pageable pageable) {
         User usuario = getUsuarioAutenticado(authentication);
         Page<Entrada> entradasPage = repository.findByUsuarioId(usuario.getId(), pageable);
         return entradasPage.map(EntradaResponseDTO::fromModel);
     }
 
+    // Busca uma entrada pelo ID, garantindo que pertence ao usuário
     public EntradaResponseDTO buscarPorId(Long id, Authentication authentication) {
         User usuario = getUsuarioAutenticado(authentication);
         Entrada entrada = repository.findByIdAndUsuarioId(id, usuario.getId())
@@ -35,6 +37,7 @@ public class EntradaService {
         return EntradaResponseDTO.fromModel(entrada);
     }
 
+    // Cria uma nova entrada pro usuário logado
     public EntradaResponseDTO criar(EntradaRequestDTO dto, Authentication authentication) {
         User usuario = getUsuarioAutenticado(authentication);
         Entrada entrada = Entrada.builder()
@@ -50,6 +53,7 @@ public class EntradaService {
         return EntradaResponseDTO.fromModel(saved);
     }
 
+    // Atualiza uma entrada existente, verificando se pertence ao usuário
     public EntradaResponseDTO atualizar(Long id, EntradaRequestDTO dto, Authentication authentication) {
         User usuario = getUsuarioAutenticado(authentication);
         Entrada entrada = repository.findByIdAndUsuarioId(id, usuario.getId())
@@ -65,6 +69,7 @@ public class EntradaService {
         return EntradaResponseDTO.fromModel(updated);
     }
 
+    // Deleta uma entrada, verificando se pertence ao usuário
     public void deletar(Long id, Authentication authentication) {
         User usuario = getUsuarioAutenticado(authentication);
         Entrada entrada = repository.findByIdAndUsuarioId(id, usuario.getId())
@@ -73,6 +78,7 @@ public class EntradaService {
         repository.delete(entrada);
     }
 
+    // Pega o usuário logado a partir da autenticação
     private User getUsuarioAutenticado(Authentication authentication) {
         String username = authentication.getName();
         return userService.findByUsername(username);

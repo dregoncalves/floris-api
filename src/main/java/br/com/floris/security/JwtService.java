@@ -26,6 +26,7 @@ public class JwtService {
     @Value("${jwt.refresh.expiration-days:7}")
     private long refreshTokenExpiration;
 
+    // Gera um token de acesso
     public String generateAccessToken(User user) {
         Instant now = Instant.now();
 
@@ -40,6 +41,7 @@ public class JwtService {
         return encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 
+    // Gera um refresh token
     public String generateRefreshToken(User user) {
         Instant now = Instant.now();
 
@@ -54,14 +56,17 @@ public class JwtService {
         return encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 
+    // Extrai o assunto (geralmente username) do token
     public String extractSubject(String token) {
         return decoder.decode(token).getSubject();
     }
 
+    // Verifica se é um refresh token
     public boolean isRefreshToken(String token) {
         return "refresh".equals(decoder.decode(token).getClaim("type"));
     }
 
+    // Valida o token
     public boolean isValid(String token) {
         try {
             decoder.decode(token);

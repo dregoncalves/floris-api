@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class HistoricoMensalDTO {
-    private String mes; // Formato "YYYY-MM"
+    private String mes;
     private BigDecimal totalEntradas;
     private BigDecimal totalGastos;
 }

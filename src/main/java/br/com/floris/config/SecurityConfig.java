@@ -19,8 +19,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
+                .cors(Customizer.withDefaults()) // Configura CORS padrão
+                .csrf(AbstractHttpConfigurer::disable) // Desabilita CSRF
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
@@ -28,15 +28,14 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         )
-                        .permitAll()
-                        .anyRequest().authenticated()
+                        .permitAll() // Libera esses caminhos
+                        .anyRequest().authenticated() // Pra qualquer outro request, precisa estar autenticado
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
-                                .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter()) // Define como extrai as permissões do JWT
                         )
-                        // Novo resolver
-                        .bearerTokenResolver(new CookieBearerTokenResolver())
+                        .bearerTokenResolver(new CookieBearerTokenResolver()) // Usa o resolver de token via cookie
                 )
                 .build();
     }
@@ -48,9 +47,10 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        // Converte as authorities (permissões) do JWT
         JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        authoritiesConverter.setAuthorityPrefix("ROLE_");
-        authoritiesConverter.setAuthoritiesClaimName("authorities");
+        authoritiesConverter.setAuthorityPrefix("ROLE_"); // Prefixo padrão pra roles
+        authoritiesConverter.setAuthoritiesClaimName("authorities"); // Onde as roles estão no JWT
 
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);

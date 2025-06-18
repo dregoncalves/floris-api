@@ -21,7 +21,6 @@ public class UserController {
         this.service = service;
     }
 
-    // GET /users - Lista todos os usuários (agora usando DTO)
     @GetMapping
     public List<UserResponseDTO> getAllUsers() {
         return service.findAll().stream()
@@ -29,31 +28,26 @@ public class UserController {
                 .toList();
     }
 
-    // GET /users/{id} - Busca usuário por ID (DTO)
     @GetMapping("/{id}")
     public UserResponseDTO getUserById(@PathVariable Long id) {
         return UserResponseDTO.fromUser(service.findById(id));
     }
 
-    // POST /users - Cria usuário (DTO na resposta)
     @PostMapping
     public UserResponseDTO createUser(@RequestBody User user) {
         return UserResponseDTO.fromUser(service.create(user));
     }
 
-    // PUT /users/{id} - Atualiza usuário (DTO na resposta)
     @PutMapping("/{id}")
     public UserResponseDTO updateUser(@PathVariable Long id, @RequestBody User user) {
         return UserResponseDTO.fromUser(service.update(id, user));
     }
 
-    // DELETE /users/{id} - Remove usuário
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Long id) {
         service.delete(id);
     }
 
-    // GET /users/me - Retorna usuário autenticado pelo token
     @GetMapping("/me")
     public UserResponseDTO getCurrentUser(Authentication authentication) {
         String username = authentication.getName();

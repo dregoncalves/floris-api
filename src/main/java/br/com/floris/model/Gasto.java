@@ -45,14 +45,12 @@ public class Gasto {
         FIXO, VARIAVEL, PARCELADO
     }
 
+    // Calcula o valor mensal do gasto
     @Transient
     public BigDecimal getValorMensal() {
-        // Se for parcelado e tiver um número de parcelas válido...
         if (getTipo() == TipoGasto.PARCELADO && totalParcelas != null && totalParcelas > 0) {
-            // ...retorna o valor da parcela.
             return valor.divide(BigDecimal.valueOf(totalParcelas), 2, RoundingMode.HALF_UP);
         }
-        // Caso contrário (Fixo, Variável), retorna o valor cheio.
         return this.valor;
     }
 }

@@ -50,6 +50,7 @@ public class SecurityBeansConfig {
         return new BCryptPasswordEncoder();
     }
 
+    // Pega a chave pública do arquivo
     private RSAPublicKey getPublicKey() throws Exception {
         String key = new String(publicKeyResource.getInputStream().readAllBytes());
         key = key
@@ -63,6 +64,7 @@ public class SecurityBeansConfig {
         return (RSAPublicKey) kf.generatePublic(spec);
     }
 
+    // Pega a chave privada do arquivo
     private RSAPrivateKey getPrivateKey() throws Exception {
         String key = new String(privateKeyResource.getInputStream().readAllBytes());
         key = key

@@ -43,26 +43,31 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
+        // Retorna as permissões do usuário, com base na role
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
     public boolean isAccountNonExpired() {
+        // Indica se a conta do usuário não está expirada
         return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
+        // Indica se a conta do usuário não está bloqueada
         return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
+        // Indica se as credenciais (senha) do usuário não estão expiradas
         return true;
     }
 
     @Override
     public boolean isEnabled() {
+        // Indica se o usuário está ativo/habilitado
         return true;
     }
 }

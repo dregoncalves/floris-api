@@ -21,13 +21,15 @@ public class GastoService {
         this.userService = userService;
     }
 
+    // Lista os gastos de um usuário, com paginação
     public Page<GastoResponseDTO> listarGastosDoUsuario(Authentication authentication, Pageable pageable) {
         User usuario = getUsuarioAutenticado(authentication);
         Page<Gasto> gastosPage = repository.findByUsuarioId(usuario.getId(), pageable);
-        
+
         return gastosPage.map(GastoResponseDTO::fromModel);
     }
 
+    // Busca um gasto pelo ID, garantindo que pertence ao usuário logado
     public GastoResponseDTO buscarPorId(Long id, Authentication authentication) {
         User usuario = getUsuarioAutenticado(authentication);
         Gasto gasto = repository.findByIdAndUsuarioId(id, usuario.getId())
@@ -36,6 +38,7 @@ public class GastoService {
         return GastoResponseDTO.fromModel(gasto);
     }
 
+    // Cria um novo gasto pro usuário logado
     public GastoResponseDTO criar(GastoRequestDTO dto, Authentication authentication) {
         User usuario = getUsuarioAutenticado(authentication);
         Gasto gasto = Gasto.builder()
@@ -54,9 +57,10 @@ public class GastoService {
         return GastoResponseDTO.fromModel(saved);
     }
 
+    // Atualiza um gasto existente, verificando se pertence ao usuário
     public GastoResponseDTO atualizar(Long id, GastoRequestDTO dto, Authentication authentication) {
         User usuario = getUsuarioAutenticado(authentication);
-        // Use o método inteligente aqui também!
+        // Busca o gasto e verifica se é do usuário
         Gasto gasto = repository.findByIdAndUsuarioId(id, usuario.getId())
                 .orElseThrow(() -> new RuntimeException("Gasto não encontrado ou não pertence ao usuário"));
 
@@ -73,15 +77,17 @@ public class GastoService {
         return GastoResponseDTO.fromModel(updated);
     }
 
+    // Deleta um gasto, verificando se pertence ao usuário
     public void deletar(Long id, Authentication authentication) {
         User usuario = getUsuarioAutenticado(authentication);
-        // E aqui também!
+        // Busca o gasto e verifica se é do usuário
         Gasto gasto = repository.findByIdAndUsuarioId(id, usuario.getId())
                 .orElseThrow(() -> new RuntimeException("Gasto não encontrado ou não pertence ao usuário"));
 
         repository.delete(gasto);
     }
 
+    // Pega o usuário logado a partir da autenticação
     private User getUsuarioAutenticado(Authentication authentication) {
         String username = authentication.getName();
         return userService.findByUsername(username);

@@ -23,7 +23,7 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
 
-    // Constantes para os nomes dos cookies
+    // Nomes dos cookies de token
     private static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
     private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
 
@@ -34,26 +34,26 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<UserResponseDTO> login(@RequestBody @Valid AuthRequest request, HttpServletResponse httpResponse) {
-        // 1. Autentica e gera os tokens
+        // Autentica e pega os tokens
         AuthResponse authResponse = authService.login(request.login(), request.password());
 
-        // 2. Adiciona os cookies de token à resposta
+        // Adiciona os tokens nos cookies da resposta
         addTokenCookiesToResponse(authResponse, httpResponse);
 
-        // 3. Busca e retorna os dados públicos do usuário no corpo da resposta
+        // Retorna os dados do usuário
         User user = userService.findByUsernameOrEmail(request.login(), request.login());
         return ResponseEntity.ok(UserResponseDTO.fromUser(user));
     }
 
     @PostMapping("/register")
     public ResponseEntity<UserResponseDTO> register(@RequestBody @Valid User user, HttpServletResponse httpResponse) {
-        // 1. Registra o usuário e já faz o login, gerando os tokens
+        // Registra o usuário e já gera os tokens
         AuthResponse authResponse = authService.registerAndLogin(user);
 
-        // 2. Adiciona os cookies de token à resposta
+        // Adiciona os tokens nos cookies
         addTokenCookiesToResponse(authResponse, httpResponse);
 
-        // 3. Retorna os dados do usuário recém-criado
+        // Retorna o usuário criado
         return ResponseEntity.ok(UserResponseDTO.fromUser(user));
     }
 
@@ -64,15 +64,14 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
-    // Logout com invalidação do cookie
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletResponse httpResponse) {
-        // Cria cookies "vazios" com tempo de expiração 0 para invalidar os existentes no navegador.
+        // Invalida os cookies de token
         ResponseCookie accessTokenCookie = ResponseCookie.from(ACCESS_TOKEN_COOKIE_NAME, "")
                 .httpOnly(true)
-                .secure(true) // obs: não esquecer de usar https em produção
+                .secure(true) // Usar HTTPS em produção
                 .path("/")
-                .maxAge(0) // expira o token
+                .maxAge(0) // Expira o token
                 .sameSite("Strict")
                 .build();
 
@@ -90,27 +89,25 @@ public class AuthController {
         return ResponseEntity.ok("Logout realizado com sucesso.");
     }
 
-
-    //Metodo que cria e adiciona os cookies de token na resposta HTTP
-
+    // Cria e adiciona os cookies com os tokens na resposta
     private void addTokenCookiesToResponse(AuthResponse authResponse, HttpServletResponse httpResponse) {
         long accessTokenMaxAge = TimeUnit.MINUTES.toSeconds(15);
         long refreshTokenMaxAge = TimeUnit.DAYS.toSeconds(7);
 
         ResponseCookie accessTokenCookie = ResponseCookie.from(ACCESS_TOKEN_COOKIE_NAME, authResponse.accessToken())
                 .httpOnly(true)
-                .secure(false)      // <-- AJUSTE CRÍTICO: 'false' para rodar em HTTP local
+                .secure(false)      // Usar 'true' pra HTTPS em produção
                 .path("/")
                 .maxAge(accessTokenMaxAge)
-                .sameSite("Lax")    // <-- AJUSTE RECOMENDADO: "Lax" é mais compatível para dev
+                .sameSite("Lax")    // 'Lax' é mais compatível pra dev
                 .build();
 
         ResponseCookie refreshTokenCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, authResponse.refreshToken())
                 .httpOnly(true)
-                .secure(false)      // <-- AJUSTE CRÍTICO: 'false' também
+                .secure(false)
                 .path("/")
                 .maxAge(refreshTokenMaxAge)
-                .sameSite("Lax")    // <-- AJUSTE RECOMENDADO: "Lax" também
+                .sameSite("Lax")
                 .build();
 
         httpResponse.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());

@@ -15,11 +15,13 @@ import java.util.Optional;
 @Repository
 public interface EntradaRepository extends JpaRepository<Entrada, Long> {
 
+    // Busca entradas por ID do usuário, com paginação
     Page<Entrada> findByUsuarioId(Long usuarioId, Pageable pageable);
 
     List<Entrada> findAllByUsuarioId(Long usuarioId);
 
     Optional<Entrada> findByIdAndUsuarioId(Long id, Long usuarioId);
 
+    // Busca entradas de um usuário em um período
     List<Entrada> findAllByUsuarioIdAndDataRecebimentoBetween(Long usuarioId, LocalDate dataInicio, LocalDate dataFim);
 }

@@ -33,7 +33,6 @@ public class AuthService {
         User user = userRepository.findByUsernameOrEmail(login, login)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        // Autenticação
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), password));
 
         String accessToken = jwtService.generateAccessToken(user);
@@ -46,7 +45,7 @@ public class AuthService {
             throw new RuntimeException("Usuário já cadastrado");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole(Role.USER); // sempre USER, vamos alterar pelo banco ou conta admin
+        user.setRole(Role.USER); // Role padrão
         User savedUser = userRepository.save(user);
 
         // Geração de tokens
@@ -57,7 +56,7 @@ public class AuthService {
     }
 
     public AuthResponse refreshToken(String refreshToken) {
-        // Valida se o token é realmente refresh e se está válido
+        // Valida o refresh token
         if (!jwtService.isValid(refreshToken) || !jwtService.isRefreshToken(refreshToken)) {
             throw new RuntimeException("Refresh token inválido ou expirado.");
         }

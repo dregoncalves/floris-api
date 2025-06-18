@@ -1,0 +1,861 @@
+{
+	"info": {
+		"_postman_id": "042b4237-a4ce-47cc-9152-33cd56f0e1d5",
+		"name": "Floris - CRUD Padrão",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "34224053"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Cadastro de usuário",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"  try {",
+									"    var json = pm.response.json();",
+									"    if (json.accessToken) pm.environment.set(\"accessToken\", json.accessToken);",
+									"    if (json.refreshToken) pm.environment.set(\"refreshToken\", json.refreshToken);",
+									"  } catch (e) {",
+									"    console.log(\"Erro ao processar token:\", e);",
+									"  }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Andre Goncalves\",\n  \"username\": \"dregoncalves\",\n  \"email\": \"dregoncalves22@gmail.com\",\n  \"password\": \"123123\",\n  \"age\": 21\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/auth/register",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"  try {",
+									"    var json = pm.response.json();",
+									"    if (json.accessToken) pm.environment.set(\"accessToken\", json.accessToken);",
+									"    if (json.refreshToken) pm.environment.set(\"refreshToken\", json.refreshToken);",
+									"  } catch (e) {",
+									"    console.log(\"Erro ao processar token:\", e);",
+									"  }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"login\": \"dregoncalves\",\n  \"password\": \"123123\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/auth/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"refreshToken\": \"eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJkcmV6b2xpcyIsImV4cCI6MTc1MDYyMzY0NywidHlwZSI6InJlZnJlc2giLCJpYXQiOjE3NTAwMTg4NDcsImF1dGhvcml0aWVzIjpbIlJPTEVfVVNFUiJdfQ.tP8-FGsH8ZvS_REkxMJ2klEVGJ16Tq4b0O5ff8OFAqADBb8xiwwMfQH-eF2CY_E-PrT1K6IXLTyC75h1kJpvtwvClTxou2mFWzCN90Z9hs2a8Tcfo2AXdXy_jBp2MeoymSSUfmmqD51AzAEyAj00HDmlvzgqCu9_j59RDBGHYmx27KNlj9xxaQY0wRMQkwxUNc-vTYYvNHONS-dEagr4oJel7CVQZ0-Vs8_lsK03HJoPvEDxygAjKOboDgWmNyNE_fogJeIj12Olatxe7bZAtqyEBJtdl5ftBW5qNS3A0qyt4Wwsqk4TDyTj47RoNX9hugakHUOvSd0SIzUx6wDJqA\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/auth/refresh",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reset de senha",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"senhaAntiga\": \"123456\",\r\n  \"novaSenha\": \"novasenhaforte\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/users/me/password",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users",
+								"me",
+								"password"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Usuários",
+			"item": [
+				{
+					"name": "Todos os usuários",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Usuário logado",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/users/me",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Usuário por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/users/{{userId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar usuário por ID",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Andre Atualizado\",\n  \"username\": \"drezolis\",\n  \"email\": \"drezolis@gmail.com\",\n  \"password\": \"654321\",\n  \"age\": 22\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/users/{{userId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Deletar usuário por ID",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/users/{{userId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Entradas",
+			"item": [
+				{
+					"name": "Todas as entradas",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/entradas",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"entradas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Entrada por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/entradas/{{entradaId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"entradas",
+								"{{entradaId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Nova entrada",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"descricao\": \"Freelance\",\n  \"valor\": 250.00,\n  \"dataRecebimento\": \"2025-06-10\",\n  \"tipo\": \"FREELA\",\n  \"recorrente\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/entradas",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"entradas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar entrada por ID",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"descricao\": \"Salário Junho (ajustado)\",\n  \"valor\": 5700.00,\n  \"dataRecebimento\": \"2025-06-11\",\n  \"tipo\": \"SALARIO\",\n  \"recorrente\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/entradas/{{entradaId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"entradas",
+								"{{entradaId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Deletar entrada por ID",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/entradas/{{entradaId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"entradas",
+								"{{entradaId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Gastos",
+			"item": [
+				{
+					"name": "Todos os gastos",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/gastos",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"gastos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Gasto por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/gastos/{{gastoId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"gastos",
+								"{{gastoId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Novo gasto",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"descricao\": \"Computador\",\n  \"valor\": 6000.00,\n  \"tipo\": \"VARIAVEL\",\n  \"dataVencimento\": \"2025-06-15\",\n  \"numeroParcelaAtual\": 1,\n  \"totalParcelas\": 12,\n  \"gastoCartao\": false,\n  \"pago\": false\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/gastos",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"gastos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar gasto por ID",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 3,\n    \"descricao\": \"Computador\",\n    \"valor\": 6000.00,\n    \"valorMensal\": 6000.00,\n    \"tipo\": \"PARCELADO\",\n    \"dataVencimento\": \"2025-06-15\",\n    \"numeroParcelaAtual\": 1,\n    \"totalParcelas\": 12,\n    \"gastoCartao\": false,\n    \"pago\": false\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/gastos/{{gastoId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"gastos",
+								"{{gastoId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Deletar gasto por ID",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/gastos/{{gastoId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"gastos",
+								"{{gastoId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Reserva de Emergência",
+			"item": [
+				{
+					"name": "Criar reserva de emergência",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"valorObjetivo\": 20000.00,\r\n  \"valorAtual\": 1500.00,\r\n  \"ativa\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/reserva-emergencia",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"reserva-emergencia"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar reserva de emergência",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJkcmV6b2xpcyIsImV4cCI6MTc1MDAxNjQ3OSwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc1MDAxNTU3OSwiYXV0aG9yaXRpZXMiOlsiUk9MRV9VU0VSIl19.gr_rGo2DBgo_KzCIFFgbN7eX0PlgOzfR58fBeFM-RXtLbU1gFEHIL0VdMYqVIboRPm8LmY9ISk71F5uE6fAUPaxgyWd67BfCBRFMSExdnnK7Ea-n-lpVHCh28qRS4SI2uauwrFTEpIpmyw46uwxK37adTnSFQmhBKqtk89u1eED2V6a4s-kNX9b-5kf1-98UXZzZOikx6H0UKmBfR-SoaM_ltK1Gkng8QK4641ouaIVP9Z8v6vGgvsj0Trqj8gYoLmmgfVWGfgnzrbb7CPRfVn0lbySzGcFb4O3gZrdWpHN00ZPOSJnX_mB4MBisR-vSedn31Ow_w7QMgA7cCor50Q",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/reserva-emergencia",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"reserva-emergencia"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar reserva de emergência",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJkcmV6b2xpcyIsImV4cCI6MTc1MDAxNjQ3OSwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc1MDAxNTU3OSwiYXV0aG9yaXRpZXMiOlsiUk9MRV9VU0VSIl19.gr_rGo2DBgo_KzCIFFgbN7eX0PlgOzfR58fBeFM-RXtLbU1gFEHIL0VdMYqVIboRPm8LmY9ISk71F5uE6fAUPaxgyWd67BfCBRFMSExdnnK7Ea-n-lpVHCh28qRS4SI2uauwrFTEpIpmyw46uwxK37adTnSFQmhBKqtk89u1eED2V6a4s-kNX9b-5kf1-98UXZzZOikx6H0UKmBfR-SoaM_ltK1Gkng8QK4641ouaIVP9Z8v6vGgvsj0Trqj8gYoLmmgfVWGfgnzrbb7CPRfVn0lbySzGcFb4O3gZrdWpHN00ZPOSJnX_mB4MBisR-vSedn31Ow_w7QMgA7cCor50Q",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": 1,\r\n    \"usuarioId\": 1,\r\n    \"valorObjetivo\": 12000.00,\r\n    \"valorAtual\": 1500.00,\r\n    \"percentualConcluido\": 25.0000,\r\n    \"ativa\": true,\r\n    \"dataCriacao\": \"2025-06-15\",\r\n    \"ultimaAtualizacao\": \"2025-06-15\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/reserva-emergencia",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"reserva-emergencia"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Excluir Reserva",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/reserva-emergencia",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"reserva-emergencia"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Metas Financeiras",
+			"item": [
+				{
+					"name": "Listas Metas",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Metas por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/metas-financeiras/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"metas-financeiras",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Meta",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"descricao\": \"Fundo de investimento\",\n    \"valorObjetivo\": 10000.00,\n    \"valorAtual\": 500.00,\n    \"prazoFinal\": \"2026-06-01\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/metas-financeiras",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"metas-financeiras"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Meta",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"descricao\": \"Viagem para a praia (férias)\",\r\n    \"valorObjetivo\": 5500.00,\r\n    \"valorAtual\": 2000.00,\r\n    \"prazoFinal\": \"2025-11-30\",\r\n    \"concluida\": false\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/metas-financeiras/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"metas-financeiras",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Dashboard",
+			"item": [
+				{
+					"name": "Dashboard",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJkcmVnb25jYWx2ZXMiLCJleHAiOjE3NTAwNTE2OTcsInR5cGUiOiJhY2Nlc3MiLCJpYXQiOjE3NTAwNTA3OTcsImF1dGhvcml0aWVzIjpbIlJPTEVfVVNFUiJdfQ.kYfRhIbUBqXQ4G7do66DSMsFBDu_hjfFWl_-W866adlCVA1kM6mAGJeoOKkkVGuUztwPpAzzf5kVXb58y6YzKXty4KAWffyBKlDEPRtc_vcjL27mKkDNVQ9I5o-FNLu7BuVO5e8anS4FXHd8D-6YqbfS2HZHaUWRXLHPNoOgBzEclGOKqViTeLMzRdtKZe_WLjvwbSlPmR0hVx5EBv4UYZiHMERA7idMNH1q41jBBSUfRjA9GD3l1aog09RJa8pY4lJCEnp6G7zaNd8kpetWsKC3t67H49U4vJ9oA-A44_AbKv9juN2Ql7MJxYzodZIhvwofXEDgqk28L6WUJhC4GA",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/dashboard",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"dashboard"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Histórico",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

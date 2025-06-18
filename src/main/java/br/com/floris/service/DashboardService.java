@@ -44,6 +44,7 @@ public class DashboardService {
         this.userService = userService;
     }
 
+    // Gera todos os dados do dashboard pro usuário
     public DashboardDTO gerarDashboard(Authentication authentication) {
         User usuario = userService.findByUsername(authentication.getName());
         LocalDate hoje = LocalDate.now();
@@ -126,6 +127,7 @@ public class DashboardService {
         return dto;
     }
 
+    // Filtra entradas para o mês de referência (considera recorrentes)
     private List<Entrada> getEntradasParaMes(LocalDate mesDeReferencia, List<Entrada> todasAsEntradas) {
         LocalDate inicioDoMes = mesDeReferencia.withDayOfMonth(1);
         LocalDate fimDoMes = mesDeReferencia.withDayOfMonth(mesDeReferencia.lengthOfMonth());
@@ -133,13 +135,16 @@ public class DashboardService {
         return todasAsEntradas.stream()
                 .filter(entrada -> {
                     if (entrada.getRecorrente()) {
+                        // Se for recorrente, conta a partir do mês de criação
                         return !mesDeReferencia.isBefore(entrada.getDataRecebimento().withDayOfMonth(1));
                     }
+                    // Senão, só conta se estiver dentro do mês
                     return !entrada.getDataRecebimento().isBefore(inicioDoMes) && !entrada.getDataRecebimento().isAfter(fimDoMes);
                 })
                 .collect(Collectors.toList());
     }
 
+    // Filtra gastos para o mês de referência (considera tipos diferentes)
     private List<Gasto> getGastosParaMes(LocalDate mesDeReferencia, List<Gasto> todosOsGastos) {
         LocalDate inicioDoMes = mesDeReferencia.withDayOfMonth(1);
         LocalDate fimDoMes = mesDeReferencia.withDayOfMonth(mesDeReferencia.lengthOfMonth());
@@ -148,12 +153,15 @@ public class DashboardService {
                 .filter(gasto -> {
                     switch (gasto.getTipo()) {
                         case FIXO:
+                            // Gastos fixos valem a partir do mês de vencimento
                             return !mesDeReferencia.isBefore(gasto.getDataVencimento().withDayOfMonth(1));
                         case PARCELADO:
+                            // Gastos parcelados valem dentro do período das parcelas
                             LocalDate dataPrimeiraParcela = gasto.getDataVencimento();
                             LocalDate dataUltimaParcela = dataPrimeiraParcela.plusMonths(gasto.getTotalParcelas() - 1);
                             return !mesDeReferencia.isBefore(dataPrimeiraParcela.withDayOfMonth(1)) && !mesDeReferencia.isAfter(dataUltimaParcela.withDayOfMonth(1));
                         case VARIAVEL:
+                            // Gastos variáveis valem só no mês exato
                             return !gasto.getDataVencimento().isBefore(inicioDoMes) && !gasto.getDataVencimento().isAfter(fimDoMes);
                         default:
                             return false;
@@ -162,11 +170,12 @@ public class DashboardService {
                 .collect(Collectors.toList());
     }
 
+    // Calcula o fluxo de caixa projetado para os próximos meses
     private List<SaldoProjetadoDTO> calcularFluxoProjetado(LocalDate hoje, BigDecimal saldoInicialMesAtual, List<Entrada> todasAsEntradas, List<Gasto> todosOsGastos) {
         List<SaldoProjetadoDTO> fluxoProjetado = new ArrayList<>();
         BigDecimal saldoAcumulado = saldoInicialMesAtual;
 
-        for (int i = 1; i <= 6; i++) {
+        for (int i = 1; i <= 6; i++) { // Projeta pros próximos 6 meses
             LocalDate mesDaProjecao = hoje.plusMonths(i);
 
             List<Entrada> entradasProjetadas = getEntradasParaMes(mesDaProjecao, todasAsEntradas);
@@ -177,6 +186,7 @@ public class DashboardService {
             BigDecimal totalGastosMes = gastosProjetados.stream()
                     .map(gasto -> {
                         if (gasto.getTipo() == Gasto.TipoGasto.PARCELADO) {
+                            // Calcula o valor da parcela de gastos parcelados
                             BigDecimal valorParcelaBase = gasto.getValor()
                                     .divide(BigDecimal.valueOf(gasto.getTotalParcelas()), 2, RoundingMode.DOWN);
 
@@ -187,12 +197,13 @@ public class DashboardService {
                                     mesDaProjecao.getMonth() == dataUltimaParcela.getMonth();
 
                             if (isUltimaParcela) {
+                                // Ajusta pra última parcela se o valor for diferente
                                 BigDecimal totalJaPago = valorParcelaBase.multiply(BigDecimal.valueOf(gasto.getTotalParcelas() - 1));
                                 return gasto.getValor().subtract(totalJaPago);
                             }
                             return valorParcelaBase;
                         }
-                        return gasto.getValorMensal();
+                        return gasto.getValorMensal(); // Pra outros tipos, pega o valor mensal
                     })
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -208,6 +219,7 @@ public class DashboardService {
         return fluxoProjetado;
     }
 
+    // Converte Metas Financeiras pra DTOs de resumo
     private List<MetaFinanceiraResumoDTO> transformarMetasEmDTO(List<MetaFinanceira> metas) {
         return metas.stream().map(meta -> {
             MetaFinanceiraResumoDTO dto = new MetaFinanceiraResumoDTO();
@@ -226,11 +238,13 @@ public class DashboardService {
         }).collect(Collectors.toList());
     }
 
+    // Calcula o percentual de um valor em relação a um total
     private BigDecimal percentual(BigDecimal valor, BigDecimal total) {
         if (total == null || total.compareTo(BigDecimal.ZERO) == 0) return BigDecimal.ZERO;
         return valor.divide(total, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
     }
 
+    // Busca a reserva de emergência do usuário
     private ReservaEmergenciaDTO buscarReservaEmergencia(User usuario) {
         Optional<ReservaEmergencia> reservaOpt = reservaEmergenciaRepository.findByUsuario(usuario);
         if (reservaOpt.isPresent()) {
@@ -246,9 +260,10 @@ public class DashboardService {
             dto.setUltimaAtualizacao(reserva.getUltimaAtualizacao());
             return dto;
         }
-        return null;
+        return null; // Retorna nulo se não houver reserva
     }
 
+    // Cria um DTO para a divisão de gastos
     private DivisaoGastosDTO criarDivisao(String tipo, BigDecimal valor, BigDecimal percentual) {
         DivisaoGastosDTO dto = new DivisaoGastosDTO();
         dto.setTipo(tipo);
@@ -257,6 +272,7 @@ public class DashboardService {
         return dto;
     }
 
+    // Gera diagnósticos financeiros pro usuário
     private List<String> gerarDiagnosticos(BigDecimal percentualFixos, BigDecimal percentualLivre, ReservaEmergenciaDTO reserva) {
         List<String> diags = new ArrayList<>();
         if (percentualFixos.compareTo(BigDecimal.valueOf(50)) <= 0) {
@@ -277,6 +293,7 @@ public class DashboardService {
         return diags;
     }
 
+    // Gera alertas financeiros pro usuário
     private List<String> gerarAlertas(BigDecimal saldoDoMes, ReservaEmergenciaDTO reserva) {
         List<String> alertas = new ArrayList<>();
         if (saldoDoMes.compareTo(BigDecimal.ZERO) < 0) {
@@ -288,56 +305,56 @@ public class DashboardService {
         return alertas;
     }
 
+    // Pega o histórico mensal de entradas e gastos
     public List<HistoricoMensalDTO> getHistoricoMensal(Authentication authentication) {
         User usuario = userService.findByUsername(authentication.getName());
         Long usuarioId = usuario.getId();
 
-        // 1. Em vez de buscar só no período, buscamos TODAS as transações do usuário.
-        // Isso é necessário para encontrar transações recorrentes que começaram antes da janela de 6 meses.
+        // Pega todas as entradas e gastos do usuário
         List<Entrada> todasAsEntradas = entradaRepository.findAllByUsuarioId(usuarioId);
         List<Gasto> todosOsGastos = gastoRepository.findAllByUsuarioId(usuarioId);
 
-        // 2. Definir o período dos últimos 6 meses e preparar a lista final
+        // Define o período dos últimos 6 meses
         LocalDate dataFim = LocalDate.now();
-        LocalDate dataInicio = dataFim.minusMonths(5).withDayOfMonth(1);
+        LocalDate dataInicio = dataFim.minusMonths(5).withDayOfMonth(1); // 6 meses, contando o mês atual
         YearMonth mesCorrente = YearMonth.from(dataInicio);
         YearMonth ultimoMes = YearMonth.from(dataFim);
 
         List<HistoricoMensalDTO> historico = new ArrayList<>();
         DateTimeFormatter formatadorMes = DateTimeFormatter.ofPattern("yyyy-MM");
 
-        // 3. Itera sobre cada mês na nossa janela de 6 meses
+        // Itera por cada mês no período
         while (!mesCorrente.isAfter(ultimoMes)) {
-            final YearMonth mesSendoCalculado = mesCorrente; // Variável final para usar em lambdas
+            final YearMonth mesSendoCalculado = mesCorrente;
 
-            // 4. Calcula o total de ENTRADAS para o mês atual do loop
+            // Calcula o total de entradas para o mês atual
             BigDecimal totalEntradasMes = todasAsEntradas.stream()
                     .filter(entrada -> {
                         YearMonth mesDaEntrada = YearMonth.from(entrada.getDataRecebimento());
                         if (entrada.getRecorrente()) {
-                            // Se for recorrente, vale se o mês do loop for igual ou posterior ao início da entrada
+                            // Recorrente: conta se o mês atual for igual ou depois do início da entrada
                             return !mesSendoCalculado.isBefore(mesDaEntrada);
                         } else {
-                            // Se não for recorrente, vale apenas no mês exato do registro
+                            // Não recorrente: conta só no mês exato do registro
                             return mesSendoCalculado.equals(mesDaEntrada);
                         }
                     })
                     .map(Entrada::getValor)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            // 5. Calcula o total de GASTOS para o mês atual do loop
+            // Calcula o total de gastos para o mês atual
             BigDecimal totalGastosMes = todosOsGastos.stream()
                     .filter(gasto -> {
                         YearMonth mesInicioGasto = YearMonth.from(gasto.getDataVencimento());
                         switch (gasto.getTipo()) {
                             case FIXO:
-                                // Gastos fixos são como entradas recorrentes
+                                // Fixo: como entrada recorrente
                                 return !mesSendoCalculado.isBefore(mesInicioGasto);
                             case VARIAVEL:
-                                // Gastos variáveis só valem no seu mês exato
+                                // Variável: só no mês exato
                                 return mesSendoCalculado.equals(mesInicioGasto);
                             case PARCELADO:
-                                // Gastos parcelados valem do início até o fim das parcelas
+                                // Parcelado: dentro do período das parcelas
                                 if (gasto.getTotalParcelas() == null || gasto.getTotalParcelas() <= 0) return false;
                                 YearMonth mesFimGasto = mesInicioGasto.plusMonths(gasto.getTotalParcelas() - 1);
                                 return !mesSendoCalculado.isBefore(mesInicioGasto) && !mesSendoCalculado.isAfter(mesFimGasto);
@@ -345,14 +362,14 @@ public class DashboardService {
                                 return false;
                         }
                     })
-                    // Usamos getValorMensal() para obter o valor da parcela em caso de gasto parcelado
+                    // Pega o valor mensal do gasto (já considera parcelas)
                     .map(Gasto::getValorMensal)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            // 6. Adiciona o resultado consolidado do mês à lista de histórico
+            // Adiciona o resultado à lista
             historico.add(new HistoricoMensalDTO(mesSendoCalculado.format(formatadorMes), totalEntradasMes, totalGastosMes));
 
-            // Vai para o próximo mês
+            // Avança para o próximo mês
             mesCorrente = mesCorrente.plusMonths(1);
         }
 

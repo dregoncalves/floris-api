@@ -19,7 +19,6 @@ public class ReservaEmergenciaController {
         this.userService = userService;
     }
 
-    // GET /reserva-emergencia - Busca a reserva do usuário autenticado
     @GetMapping
     public ReservaEmergenciaDTO getReserva(Authentication authentication) {
         String username = authentication.getName();
@@ -27,7 +26,6 @@ public class ReservaEmergenciaController {
         return reservaService.buscarReservaPorUsuario(user.getId());
     }
 
-    // POST /reserva-emergencia - Cria a reserva para o usuário autenticado
     @PostMapping
     public ReservaEmergenciaDTO criarReserva(@RequestBody ReservaEmergenciaDTO dto, Authentication authentication) {
         String username = authentication.getName();
@@ -35,7 +33,6 @@ public class ReservaEmergenciaController {
         return reservaService.criarReserva(user.getId(), dto);
     }
 
-    // PUT /reserva-emergencia - Atualiza a reserva do usuário autenticado
     @PutMapping
     public ReservaEmergenciaDTO atualizarReserva(@RequestBody ReservaEmergenciaDTO dto, Authentication authentication) {
         String username = authentication.getName();
@@ -43,7 +40,6 @@ public class ReservaEmergenciaController {
         return reservaService.atualizarReserva(user.getId(), dto);
     }
 
-    // DELETE /reserva-emergencia - Deleta a reserva do usuário autenticado
     @DeleteMapping
     public void deletarReserva(Authentication authentication) {
         String username = authentication.getName();

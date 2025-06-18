@@ -15,12 +15,15 @@ import java.util.Optional;
 @Repository
 public interface GastoRepository extends JpaRepository<Gasto, Long> {
 
-    // Paginação
+    // Lista os gastos do usuário com paginação
     Page<Gasto> findByUsuarioId(Long usuarioId, Pageable pageable);
 
+    // Busca todos os gastos de um usuário
     List<Gasto> findAllByUsuarioId(Long usuarioId);
 
+    // Busca um gasto específico pelo ID e ID do usuário
     Optional<Gasto> findByIdAndUsuarioId(Long id, Long usuarioId);
 
+    // Busca gastos de um usuário em um período
     List<Gasto> findAllByUsuarioIdAndDataVencimentoBetween(Long usuarioId, LocalDate dataInicio, LocalDate dataFim);
 }
