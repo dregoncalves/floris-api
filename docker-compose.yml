@@ -1,0 +1,38 @@
+services:
+  app:
+    build: .
+    container_name: floris-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/floris
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: root_password_forte
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    networks:
+      - floris-network
+
+  db:
+    image: postgres:16-alpine
+    container_name: floris-db
+    restart: always
+    environment:
+      POSTGRES_DB: floris
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root_password_forte
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - floris-network
+
+volumes:
+  postgres_data:
+
+networks:
+  floris-network:
+    driver: bridge
